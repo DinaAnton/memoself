@@ -52,6 +52,7 @@ textarea{resize:none;min-height:130px}
 .chk.done{background:var(--ac);border-color:var(--ac)}
 .badge{font-size:10px;font-weight:700;background:var(--s2);color:var(--so);padding:2px 7px;border-radius:20px;display:inline-block;margin-top:3px}
 .fqrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.fqrow .fqb:last-child:nth-child(5){grid-column:span 2;}
 .fqb{padding:14px 8px;border:1.5px solid var(--bo);border-radius:12px;background:var(--bg);color:var(--so);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:rgba(0,0,0,0.1)}
 .fqb.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -137,9 +138,9 @@ textarea{resize:none;min-height:130px}
     <button class="fqb on" id="fq-weekly" onclick="setFreq('weekly')">Weekly</button>
     <button class="fqb" id="fq-monthly" onclick="setFreq('monthly')">Monthly</button>
     <button class="fqb" id="fq-yearly" onclick="setFreq('yearly')">Yearly</button>
+    <button class="fqb" id="fqrec" onclick="(function(){var s=document.getElementById('recrow');var on=s.style.display==='none';s.style.display=on?'block':'none';document.getElementById('fqrec').classList.toggle('on',on);if(!on){['daily','weekly','monthly','yearly'].forEach(function(x){var e=document.getElementById('fq-'+x);if(e)e.classList.remove('on');});document.getElementById('taskFreq').value='m30';}else{document.getElementById('taskFreq').value='weekly';}})()" style="grid-column:span 2">&#9201; Recurring</button>
   </div>
   <input type="hidden" id="taskFreq" value="weekly">
-  <button class="fqb" id="fqrec" onclick="(function(){var s=document.getElementById('recrow');var on=s.style.display==='none';s.style.display=on?'block':'none';document.getElementById('fqrec').classList.toggle('on',on);if(!on){document.getElementById('taskFreq').value='weekly';}})()" style="margin-top:8px;width:100%;border-style:dashed">&#9201; Recurring reminder (min/hours)</button>
   <div id="recrow" style="display:none;margin-top:10px;padding:14px;background:var(--s2);border-radius:12px">
     <div style="font-size:11px;font-weight:700;color:var(--so);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Repeat every</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
@@ -161,6 +162,22 @@ textarea{resize:none;min-height:130px}
     <input type="time" id="recTime" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;background:var(--bg);color:var(--tx);font-size:14px;font-family:inherit;outline:none">
     <div id="recSelLabel" style="font-size:12px;color:var(--ac);font-weight:600;margin-top:8px;min-height:18px"></div>
   </div>
+  <label class="fl">Estimated time <span style="font-weight:400;color:var(--so)">(optional)</span></label>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px" id="estRow">
+    <button class="fqb" onclick="setEst('5m')">5 min</button>
+    <button class="fqb" onclick="setEst('10m')">10 min</button>
+    <button class="fqb" onclick="setEst('15m')">15 min</button>
+    <button class="fqb" onclick="setEst('20m')">20 min</button>
+    <button class="fqb" onclick="setEst('30m')">30 min</button>
+    <button class="fqb" onclick="setEst('45m')">45 min</button>
+    <button class="fqb" onclick="setEst('1h')">1 hr</button>
+    <button class="fqb" onclick="setEst('2h')">2 hr</button>
+    <button class="fqb" onclick="setEst('3h')">3 hr</button>
+    <button class="fqb" onclick="setEst('4h')">4 hr</button>
+    <button class="fqb on" onclick="setEst('')" id="est-none" style="grid-column:span 2">✕ None</button>
+  </div>
+  <input type="hidden" id="taskEst" value="">
+  <div id="estLabel" style="font-size:12px;color:var(--ac);font-weight:600;min-height:16px;margin-bottom:10px"></div>
   <label class="fl">What do you need to do?</label>
   <input type="text" id="taskName" placeholder="e.g. Back up photos" autocomplete="off" onkeydown="if(event.key==='Enter')saveTask()">
   <div class="macts">
@@ -351,6 +368,24 @@ function setRec(freq){
   if(sl)sl.textContent='Selected: '+lbl;
 }
 
+function setEst(v){
+  document.getElementById('taskEst').value=v;
+  document.querySelectorAll('#estRow .fqb').forEach(function(b){b.classList.remove('on');});
+  if(v){
+    document.querySelectorAll('#estRow .fqb').forEach(function(b){
+      var a=b.getAttribute('onclick')||'';
+      if(a.indexOf("'"+v+"'")>=0){b.classList.add('on');}
+    });
+    var lbl='';
+    if(v.endsWith('m'))lbl='⏱ '+v.replace('m','')+' min';
+    else{var n=parseInt(v);lbl='⏱ '+n+' hour'+(n>1?'s':'');}
+    document.getElementById('estLabel').textContent='Selected: '+lbl;
+  } else {
+    document.getElementById('estLabel').textContent='';
+    var nb=document.getElementById('est-none');if(nb)nb.classList.add('on');
+  }
+}
+
 function setFreq(f){
   document.getElementById('taskFreq').value=f;
   ['daily','weekly','monthly','yearly'].forEach(x=>{
@@ -376,6 +411,7 @@ function handleFab(){
     document.getElementById('taskId').value='';
     document.getElementById('taskName').value='';
     setFreq('weekly');
+    setEst('');
     document.getElementById('taskModalTitle').textContent='New Task';
     const hs=document.getElementById('hourly-section');if(hs)hs.style.display='none';
     const hb=document.getElementById('fq-hourly');if(hb)hb.classList.remove('on');
@@ -449,10 +485,11 @@ function saveTask(){
   const id=document.getElementById('taskId').value;
   const name=document.getElementById('taskName').value.trim();
   const freq=document.getElementById('taskFreq').value||'weekly';
+  const est=document.getElementById('taskEst')?document.getElementById('taskEst').value||'':'';
   if(!name)return;
   const tid=id||uid();
-  if(id){tasks=tasks.map(t=>t.id===id?{...t,name,freq}:t);}
-  else{tasks.push({id:tid,name,freq,created:today()});}
+  if(id){tasks=tasks.map(t=>t.id===id?{...t,name,freq,est}:t);}
+  else{tasks.push({id:tid,name,freq,est,created:today()});}
   S.set('tasks',tasks);
   if(freq.startsWith('m')||freq.startsWith('h')){
     const rt=document.getElementById('recTime');
@@ -859,6 +896,7 @@ function renderTaskCard(t){
     '<div style="flex:1;min-width:0">',
     '<div style="font-size:15px;font-weight:500;text-decoration:'+(d?'line-through':'none')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.name)+'</div>',
     '<span class="badge">'+(FL[t.freq]||t.freq)+'</span>',
+    t.est?'<span class="badge" style="background:var(--ac);color:#fff;margin-left:4px">⏱ '+(t.est.endsWith('m')?t.est.replace('m',' min'):(parseInt(t.est)+' hr'))+'</span>':'',
     '</div>',
     '<button class="delbtn" data-del="'+t.id+'" style="width:28px;height:28px;border:none;background:transparent;color:var(--so);cursor:pointer;display:flex;align-items:center;justify-content:center">',
     '<svg viewBox="0 0 14 14" width="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>',
@@ -880,7 +918,9 @@ function renderRecCard(t){
   var svg_del='<svg viewBox="0 0 14 14" width="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>';
   card.innerHTML='<div class="trow"><div class="chk'+(d?' done':'')+'">'+( d?svg_done:'')+'</div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;text-decoration:'+(d?'line-through':'none')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.name)+'</div>'
-    +'<span class="badge">'+getFL(t.freq)+'</span></div>'
+    +'<span class="badge">'+getFL(t.freq)+'</span>'
+    +(t.est?'<span class="badge" style="background:var(--ac);color:#fff;margin-left:4px">⏱ '+(t.est.endsWith('m')?t.est.replace('m',' min'):(parseInt(t.est)+' hr'))+'</span>':'')
+    +'</div>'
     +'<button class="recDelBtn" style="width:28px;height:28px;border:none;background:transparent;color:var(--so);cursor:pointer;display:flex;align-items:center;justify-content:center">'+svg_del+'</button>'
     +'</div>';
   (function(tid){
@@ -930,7 +970,7 @@ function draw(){
           +'<div class="chk'+(d?' done':'')+'">'+( d?'<svg viewBox="0 0 12 12" width="12"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>':'')+'</div>'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:15px;font-weight:500;text-decoration:'+(d?'line-through':'none')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.name)+'</div>'
-          +'<span class="badge">'+FL[t.freq]+'</span></div>'
+          +'<span class="badge">'+FL[t.freq]+'</span>'+(t.est?'<span class="badge" style="background:var(--ac);color:#fff;margin-left:4px">⏱ '+(t.est.endsWith('m')?t.est.replace('m',' min'):(parseInt(t.est)+' hr'))+'</span>':'')+'</div>'
           +'<button onclick="event.stopPropagation();deleteTask(\''+t.id+'\')" style="width:28px;height:28px;border:none;background:transparent;color:var(--so);cursor:pointer;display:flex;align-items:center;justify-content:center">'
           +'<svg viewBox="0 0 14 14" width="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>'
           +'</button></div></div>';
